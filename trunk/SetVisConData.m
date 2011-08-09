@@ -6,6 +6,18 @@ global gSurface;
 if nargin==0
     error('Require arguments!');
 end
+hFig=findobj('Tag','VisConFig');
+hAxes=findobj('Tag','VisConAxes');
+if isempty(hFig)
+    error('VisualConnectome is not running');
+else
+    set(0,'CurrentFigure',hFig);
+end
+if isempty(hAxes)
+    error('You must first create or open a VCT file!');
+else
+    set(hFig,'CurrentAxes',hAxes);
+end
 VarNum=length(varargin);
 if mod(VarNum+1,2)==0
     error('The number of arguments must be even!');

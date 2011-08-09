@@ -8,11 +8,11 @@ if ~isempty(hAxes),  delete(hAxes);   end
 %Create axes
 hAxes=axes('Tag','VisConAxes','Color','k',...
     'XColor','w','YColor','w','ZColor','w',...
-    'DrawMode','fast','Position',[0.08 0.08 0.8 0.8]);
+    'DrawMode','fast','Position',[0.08 0.08 0.8 0.8],'HitTest','off');
 axis off vis3d;
 view(hAxes,-90,0);
 light('Position',[1,0,0],'Style','infinite');
 light('Position',[-1,0,0],'Style','infinite');
-gFigAxes.InitCamViewAng=get(hAxes,'CameraViewAngle');
+gFigAxes.InitCamViewAng=camva(hAxes);
 end
 

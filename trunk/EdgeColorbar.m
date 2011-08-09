@@ -1,12 +1,20 @@
-%VISCON_EDGECOLORBAR Summary of this function goes here
-%   Detailed explanation goes here
-function VisCon_EdgeCbar(Sw)
+%This function is used to toggle edge colorbar visibility.
+function EdgeColorbar(Sw)
 global gFigAxes;
-global gNetwork;
 if nargin==0,   Sw='on';    end
 hFig=findobj('Tag','VisConFig');
 hAxes=findobj(hFig,'Tag','VisConAxes');
-if strcmpi(Sw,'on')
+hMenuEdgeCbar=findobj(hFig,'Tag','VisConMenuEdgeCbar');
+hTbarEdgeCbar=findobj(hFig,'Tag','VisConTbarEdgeCbar');
+if isempty(hFig)
+    error('VisualConnectome is not running');
+else
+    set(0,'CurrentFigure',hFig);
+end
+if isempty(hAxes)
+    error('You must first create or open a VCT file!');
+end
+if strcmpi(Sw,'on') || strcmpi(Sw,'show')
     %delete edge colorbar if it exists
     try     
         delete(gFigAxes.hEdgeCbar); 
@@ -18,13 +26,17 @@ if strcmpi(Sw,'on')
     gFigAxes.hEdgeCbar=colorbar('Units','pixel',...
         'Position',[left bottom width height],...
         'HitTest','off');
-    caxis(hAxes,gNetwork.EdgeRange);
     title(gFigAxes.hEdgeCbar,'Edge Weight','color','w');
-elseif strcmpi(Sw,'off')
+    VisCon_UpdateEdgeCbar();
+    set(hMenuEdgeCbar,'Checked','on');
+    set(hTbarEdgeCbar,'State','on');
+elseif strcmpi(Sw,'off') || strcmpi(Sw,'hide')
     try
         delete(gFigAxes.hEdgeCbar);  
     end
     gFigAxes.hEdgeCbar=NaN;
+    set(hMenuEdgeCbar,'Checked','off');
+    set(hTbarEdgeCbar,'State','off');
 else
     error('Wrong input argument!');
 end
