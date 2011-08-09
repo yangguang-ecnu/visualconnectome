@@ -46,7 +46,7 @@ end
 
 %Validate NodeName data
 if ~isempty(gNetwork.NodeName) && length(gNetwork.NodeName)~=gNetwork.NodeNum
-    error('The length of NodeName is not equal to the number of nodes!');
+    error('The length of NodeName is not equal to the number of nodes!');   
 end
 
 %Validate EdgeWidth data
@@ -81,8 +81,9 @@ gFigAxes.hEdges=zeros(gNetwork.NodeNum)*NaN;
 gFigAxes.Cube.Vertices=[1 1 1;1 -1 1;-1 -1 1;-1 1 1;1 1 -1;1 -1 -1;-1 -1 -1;-1 1 -1];
 gFigAxes.Cube.Faces=[1 2 3 4;5 6 7 8;1 2 6 5;3 4 8 7;1 4 8 5;2 3 7 6];
 %Create displaying property
-gFigAxes.NodeSelected=[];
-gFigAxes.EdgeShowed=false(gNetwork.NodeNum);
+gFigAxes.NodeSelected = [];
+gFigAxes.NodeShowed = false(1,gNetwork.NodeNum);
+gFigAxes.EdgeShowed = false(gNetwork.NodeNum);
 
 end
 

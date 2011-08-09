@@ -1,6 +1,7 @@
 clc;
 clear;
 load Network.mat
+load AAL_Reg_Name.mat
 %SurfStat exsits?
 path=which('SurfStatReadSurf');
 if isempty(path)
@@ -17,4 +18,4 @@ RSurfData.Faces=RSurf.tri;
 RSurfData.Vertices=RSurf.coord.';
 clear LSurf RSurf;
 %Run VisualConnectome
-VisualConnectome(AdjMat,PosMat,'LSurfData',LSurfData,'RSurfData',RSurfData);
+VisualConnectome(AdjMat,PosMat,'LSurfData',LSurfData,'RSurfData',RSurfData,'NodeName',AAL_Reg_Name);

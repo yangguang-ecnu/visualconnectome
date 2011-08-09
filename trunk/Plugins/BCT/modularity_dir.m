@@ -15,6 +15,9 @@ function [Ci Q]=modularity_dir(A)
 %   Outputs:    Ci,     optimal community structure
 %               Q,      maximized modularity
 %
+%   Note: Ci and Q may vary from run to run, due to heuristics in the 
+%   algorithm. Consequently, it may be worth to compare multiple runs.
+%   Also see Good et al. (2010) Phys. Rev. E 81:046106.
 %
 %   Reference: Leicht and Newman (2008) Phys Rev Lett 100:118703.
 %
@@ -22,17 +25,21 @@ function [Ci Q]=modularity_dir(A)
 %   2008-2010
 %   Mika Rubinov, UNSW
 %   Jonathan Power, WUSTL
+%   Dani Bassett, UCSB
 
-%
-%Modification History:
-%Jul 2008: Original
-%Oct 2008: Positive eigenvalues are now insufficient for division (Jonathan Power, WUSTL)
-%Dec 2008: Fine-tuning is now consistent with Newman's description (Jonathan Power)
-%Dec 2008: Fine-tuning is now vectorized (Mika Rubinov)
 
+%   Modification History:
+%   Jul 2008: Original (Mika Rubinov)
+%   Oct 2008: Positive eigenvalues are now insufficient for division (Jonathan Power)
+%   Dec 2008: Fine-tuning is now consistent with Newman's description (Jonathan Power)
+%   Dec 2008: Fine-tuning is now vectorized (Mika Rubinov)
+%   Sep 2010: Node identities are now permuted (Dani Bassett)
+
+N=length(A);                            %number of vertices
+n_perm = randperm(N);                   %DB: randomly permute order of nodes
+A = A(n_perm,n_perm);                   %DB: use permuted matrix for subsequent analysis
 Ki=sum(A,1);                            %in-degree
 Ko=sum(A,2);                            %out-degree
-N=length(A);                            %number of vertices
 m=sum(Ki);                           	%number of edges
 b=A-(Ko*Ki).'/m;
 B=b+b.';                            	%directed modularity matrix
@@ -91,3 +98,6 @@ end
 s=Ci(:,ones(1,N));                      %compute modularity
 Q=~(s-s.').*B/(2*m);
 Q=sum(Q(:));
+Ci_corrected = zeros(N,1);              % DB: initialize Ci_corrected
+Ci_corrected(n_perm) = Ci;              % DB: return order of nodes to the order used at the input stage.
+Ci = Ci_corrected;                      % DB: output corrected community assignments
