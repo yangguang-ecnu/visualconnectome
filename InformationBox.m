@@ -23,7 +23,7 @@ if strcmpi(Sw,'on') || strcmpi(Sw,'show')
     FigPos=get(hFig,'Position');
     gFigAxes.hInformBox=annotation('textbox','FontSize',8,...
         'EdgeColor','w','Color','w','LineWidth',1.5,'HitTest','off',...
-        'Units','pixel','Position',[3 FigPos(4)-102 142 100]);
+        'Units','pixel','Position',[3 FigPos(4)-122 162 120]);
     if isempty(gFigAxes.NodeSelected)
         VisCon_UpdateInform([]);
     else

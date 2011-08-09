@@ -164,7 +164,7 @@ set(hPropThresEdit,'Enable','off');
         end
         set(hAbsMinThresSlider,'Value',AbsMinThres);
         set(0,'CurrentFigure',hFig);
-        EdgeThreshold('absolute',MinThres,MaxThres);
+        EdgeThreshold('absolute',AbsMinThres,AbsMaxThres);
     end
     %Absolute maximal threshold edit function
     function AbsMaxThresEditFcn(Src,Evnt)
@@ -189,7 +189,7 @@ set(hPropThresEdit,'Enable','off');
         end
         set(hAbsMaxThresSlider,'Value',AbsMaxThres);
         set(0,'CurrentFigure',hFig);
-        EdgeThreshold('absolute',MinThres,MaxThres);
+        EdgeThreshold('absolute',AbsMinThres,AbsMaxThres);
     end
     %Counting threshold edit function
     function CountThresEditFcn(Src,Evnt)

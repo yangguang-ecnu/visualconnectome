@@ -8,16 +8,22 @@ if ~isscalar(Node) && ~isempty(Node)
     error('Input argument should be a scalar!')
 end
 NodeInformTitle={...
-    '    {\bf\fontsize{10}Information Box}',...
+    '        {\bf\fontsize{10}Information Box}',...
     '{\bfNodTag:} ',...
     '{\bfRegion:} ',...
     '{\bfDegree:} '};
 if ishandle(gFigAxes.hInformBox)
-    hNode=gFigAxes.hNodes(Node);
     NodeInform=NodeInformTitle;
-    NodeInform{2}=[NodeInform{2},get(hNode,'Tag')];
-    if ~isempty(gNetwork.NodeName)
-        NodeInform{3}=[NodeInform{3},gNetwork.NodeName{Node}];
+    if ~isempty(Node)
+        hNode=gFigAxes.hNodes(Node);
+        NodeInform{2}=[NodeInform{2},get(hNode,'Tag')];
+        if ~isempty(gNetwork.NodeName) 
+            NodeName = strrep(gNetwork.NodeName{Node}, '_', '\_');
+            NodeInform{3}=[NodeInform{3},gNetwork.NodeName{Node}];
+        end
+        if isfield(gNetwork,'Degree')
+            NodeInform{4}=[NodeInform{4},sprintf('%d',gNetwork.Degree(Node))];
+        end
     end
     set(gFigAxes.hInformBox,'String',NodeInform);
 end
