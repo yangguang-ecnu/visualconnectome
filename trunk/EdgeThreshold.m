@@ -1,12 +1,35 @@
-%THRESEDGE Summary of this function goes here
-%   Detailed explanation goes here
-function EdgeThreshold(Method,MinThres,MaxThres)
-if nargin<2
+function EdgeThreshold(Method, Thres, Subj, Display)
+global gVisConFig;
+global gVisConNet;
+
+if nargin < 2
     error('Require at least two arguments!');
 end
+if nargin < 3
+    Subj = gVisConFig.CurSubj;
+end
+if nargin < 4
+    Display = 'on';
+end
 
-hFig=findobj('Tag','VisConFig');
-hAxes=findobj(hFig,'Tag','VisConAxes');
+if ~ischar(Method) || isempty(strmatch(lower(Method), {'absolute','counting','proportional'},'exact'))
+    error('Error input Method!');
+end
+         
+if ischar(Subj) && strcmpi(Subj, 'all')
+    Subj = [1:length(gVisConNet)];
+elseif ~isnumeric(Subj)
+    error('Input Subj should be numeric subject index!');
+end
+
+if max(Subj) > length(gVisConNet) || min(Subj) < 1
+    error('The input Subj exceeds subject index!');
+end
+
+hFig = findobj('Tag','VisConFig');
+hMatView = findobj('Tag','VisConMatView');
+hAxes = findobj(hFig,'Tag','VisConAxes');
+
 if isempty(hFig)
     error('VisualConnectome is not running');
 else
@@ -17,12 +40,27 @@ if isempty(hAxes)
 else
     set(hFig,'CurrentAxes',hAxes);
 end
-
-if nargin<3
-    VisCon_EdgeThres(Method,MinThres);
-else
-    VisCon_EdgeThres(Method,MinThres,MaxThres);
+for iSub = Subj
+    VisCon_EdgeThres(Method, Thres, iSub);
 end
-VisCon_UpdateEdgeCbar()
+if strcmpi(Display, 'on')
+    if strcmpi(Method, 'absolute')
+        fprintf('Edges with weight larger than %.6f will be retained!\n', gVisConNet(gVisConFig.CurSubj).EdgeAbsThres);
+    elseif strcmpi(Method, 'counting') || strcmpi(Method, 'proportional')
+        fprintf('%i (%.2f%%) of strongest edges will be retained!\n', gVisConNet(gVisConFig.CurSubj).EdgeCountThres,...
+            gVisConNet(gVisConFig.CurSubj).EdgeCountThres * 100 / gVisConFig.EdgeNum);
+    end
+end
+%Update Edges
+VisCon_UpdateEdgeCbar();
+VisCon_UpdateEdges();
+%Update ConMat Viewer
+if ~isempty(hMatView)
+    ConMatViewer();
+end
+%
+if ~isempty(gVisConFig.NodeSelected)
+    VisCon_UpdateInfo(gVisConFig.NodeSelected(end));
+end
 end
 

@@ -4,122 +4,180 @@
 %
 %This is VisualConnectome main function.
 %
-%Revision 0.10  2010/10/21  by Dai @ NICA Group,CASIA   solar2ain@gmail.com
-%Revision 0.20  2010/10/21  by Dai @ NICA Group,CASIA   solar2ain@gmail.com
+%Revision 0.10a 2010/10/21 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
+%Revision 0.20a 2010/10/21 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
+%Revision 0.20b 2011/05/21 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
+%Revision 0.30a 2011/07/28 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
+%Revision 0.35a 2011/08/01 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
 
-function VisualConnectome(AdjMat,PosMat,varargin)
-global gFigAxes;
-global gNetwork;
-global gSurface;
+function VisualConnectome(ConMat,PosMat,varargin)
+global gVisConFig;
+global gVisConNet;
+global gVisConSurf;
+global gVisConState;
+gVisConState = 'Starting';
 %Add function path
-gFigAxes.VisConPath=which('VisualConnectome.m');
-gFigAxes.VisConPath=gFigAxes.VisConPath(1:end-length('VisualConnectome.m'));
-addpath(fullfile(gFigAxes.VisConPath,'Functions'));
-addpath(fullfile(gFigAxes.VisConPath,'Functions','GUI'));
-addpath(fullfile(gFigAxes.VisConPath,'Plugins','SurfStat'));
-addpath(fullfile(gFigAxes.VisConPath,'Plugins','BCT'));
+gVisConFig.VisConPath = which('VisualConnectome.m');
+gVisConFig.VisConPath = gVisConFig.VisConPath(1:end-length('VisualConnectome.m'));
+addpath(fullfile(gVisConFig.VisConPath,'Functions'));
+addpath(fullfile(gVisConFig.VisConPath,'Functions','GUI'));
+addpath(fullfile(gVisConFig.VisConPath,'Plugins','SurfStat'));
+addpath(fullfile(gVisConFig.VisConPath,'Plugins','BCT'));
 
 %Call figure if it exsits, otherwise create new
-hFig=findobj('Tag','VisConFig');
+hFig = findobj('Tag','VisConFig');
 if ~isempty(hFig)
     figure(hFig);
 else
-    VisCon_Figure();
+    VisCon_NewFig();
 end
-if nargin==0,   return;     end
+if nargin == 0,   return;     end
 
-%Get the number of stardand arguments and optional arguments
-optargin=length(varargin);
-if nargin>2 && ~isnumeric(PosMat)
-    varargin=[{PosMat} varargin];
-    optargin=optargin+1;
-end
-stdargin=nargin-optargin;
+ParaNames = {'NodeStyle',...
+    'NodeSize',...
+    'NodeColor',...
+    'NodeName',...
+    'EdgeWidth',...
+    'LSurfData',...
+    'RSurfData',...
+    'LSurfColor',...
+    'RSurfColor',...
+    'LSurfAlpha',...
+    'RSurfAlpha'};
 
-ParaNames={'NodeStyle','NodeScale','NodeColor','NodeName','EdgeWidth','EdgeColormap',...
-    'LSurfData','RSurfData','LSurfColor','RSurfColor','LSurfAlpha','RSurfAlpha'};
-
-%Different methods for VCDataSturct input and AdjMat,PosMat input
-%VCDataStruct input
-if stdargin<2
-    if ~isstruct(AdjMat)
+%Different methods for VCDataSturct input and ConMat,PosMat input
+gVisConState = 'Loading';
+if nargin == 1
+    %VCDataStruct input
+    if ~isstruct(ConMat)
         error('Require at least two arguments!');
-    elseif isfield(AdjMat,'Network') && isfield(AdjMat,'Surface')
-        gNetwork=AdjMat.Network;
-        gSurface=AdjMat.Surface;
-        clear AdjMat;
-        Defaults={gNetwork.NodeStyle,gNetwork.NodeScale,gNetwork.NodeColor,gNetwork.NodeName,...
-            gNetwork.EdgeWidth,gNetwork.EdgeCmap,...
-            gSurface.LSurfData,gSurface.RSurfData,...
-            gSurface.LSurfColor,gSurface.RSurfColor,...
-            gSurface.LSurfAlpha,gSurface.RSurfAlpha};
-    else
+    elseif ~isfield(ConMat,'VisConNet') || ~isfield(ConMat,'VisConFig')
         error('Wrong VisualConnetome file format!');
     end
-%AdjMat & PosMat input
+    
+    gVisConNet = ConMat.VisConNet;
+    gVisConFig = ConMat.VisConFig;
+    
+    if isfield(ConMat,'VisConSurf')
+        gVisConSurf = ConMat.VisConSurf;
+    else
+        gVisConSurf.LSurfData = [];
+        gVisConSurf.RSurfData = [];
+        gVisConSurf.LSurfColor = [0.7 0.7 0.7];
+        gVisConSurf.RSurfColor = [0.7 0.7 0.7];
+        gVisConSurf.LSurfAlpha = 0.2;
+        gVisConSurf.RSurfAlpha = 0.2;
+    end
+    %Preprocess
+    gVisConFig.NodeSelected = [];
+    gVisConFig.hNodes = zeros(gVisConFig.NodeNum,1)*NaN;
+    gVisConFig.hNodeMarkers = zeros(gVisConFig.NodeNum,1)*NaN;
+    gVisConFig.hEdges = zeros(gVisConFig.NodeNum)*NaN;
+    gVisConFig.hEdgeCbar = NaN;
+    NodeShowed = gVisConNet(gVisConFig.CurSubj).NodeShowed;
+    gVisConNet(gVisConFig.CurSubj).NodeShowed = false(1,gVisConFig.NodeNum);
+    EdgeShowed = gVisConFig.EdgeShowed;
+    gVisConFig.EdgeShowed = false(gVisConFig.NodeNum);
+    %Create Figure
+    VisCon_FigOper();
+    VisCon_Axes();
+    %Draw Network
+    ShowNodes(find(NodeShowed));
+    [r, c] = find(EdgeShowed);
+    ConnectTwoNodes([r c]);
+    set(findobj('Tag','VisConFig'), 'Name', ['VisualConnectome - ' gVisConFig.FilePath gVisConFig.FileName]);
 else
-    if ~isequal(AdjMat,AdjMat.')
-        error('Adjacent matrix should be symmetric!');
+    %ConMat & PosMat input
+    nSub = size(ConMat, 3);
+    if(size(PosMat, 3) ~= nSub && size(PosMat, 3) ~= 1)
+        error('Number of position matrix should be %d or 1!', nSub);
+    elseif size(PosMat, 3) == 1
+        PosMat = repmat(PosMat, [1,1,nSub]);
+    end 
+    gVisConNet = struct;
+    Defaults={'sphere',...      %Default Node Style
+            2,...                   %Default Node Size
+            'y',...                 %Default Node Color
+            '',...                  %Default Node Name
+            1.5,...                 %Default Edge Width
+            [],...                  %Default Left Surface Data
+            [],...                  %Default Right Surface Data
+            [0.7 0.7 0.7],...       %Default Left Surface Color
+            [0.7 0.7 0.7],...       %Default Right Surface Color
+            0.2,...                 %Default Left Surface Alpha
+            0.2};                   %Default Right Surface Alpha
+        %Obtain input arguments
+        [NodeStyle,...
+            NodeSize,...
+            NodeColor,...
+            NodeName,...
+            EdgeWidth,...
+            gVisConSurf.LSurfData,...
+            gVisConSurf.RSurfData,...
+            gVisConSurf.LSurfColor,...
+            gVisConSurf.RSurfColor,...
+            gVisConSurf.LSurfAlpha,...
+            gVisConSurf.RSurfAlpha] = VisCon_GetArgs(ParaNames,Defaults,varargin{:});
+    for iSub = 1:nSub
+        gVisConNet(iSub,1).ConMat = ConMat(:,:,iSub);
+        gVisConNet(iSub,1).PosMat = PosMat(:,:,iSub);
+        gVisConNet(iSub,1).NodeStyle = NodeStyle;
+        gVisConNet(iSub,1).NodeSize = NodeSize;
+        gVisConNet(iSub,1).NodeColor = NodeColor;
+        gVisConNet(iSub,1).NodeName = NodeName;
+        gVisConNet(iSub,1).EdgeWidth = EdgeWidth;
     end
-    n=length(AdjMat);
-    if size(PosMat,1)~=n
-        error('Position matrix should have equal rows as adjacent matrix!')
-    end
-    gNetwork.AdjMat=AdjMat;
-    gNetwork.PosMat=PosMat;
-    gNetwork.NodeNum=n;
-    clear AdjMat PosMat;
-    Defaults={'sphere',2,'y','',1.5,gFigAxes.DltCmap,...
-    [],[],[0.7 0.7 0.7],[0.7 0.7 0.7],0.2,0.2};
+    %Preprocess
+    VisCon_Preproc();
+    %Create Figure
+    VisCon_FigOper();
+    VisCon_Axes();
+    %Draw Network
+    ShowNodes all;
 end
+SetEdgeCmap(gVisConFig.DftCmap);
+VisCon_SetSaveState();
+gVisConState = 'Loaded';
 
-%
-[gNetwork.NodeStyle,...
-    gNetwork.NodeScale,...
-    gNetwork.NodeColor,...
-    gNetwork.NodeName,...
-    gNetwork.EdgeWidth,...
-    gNetwork.EdgeCmap,...
-    gSurface.LSurfData,...
-    gSurface.RSurfData,...
-    gSurface.LSurfColor,...
-    gSurface.RSurfColor,...
-    gSurface.LSurfAlpha,...
-    gSurface.RSurfAlpha]=VisCon_GetArgs(ParaNames,Defaults,varargin{:});
-
-%Preprocess
-VisCon_Preproc();
-
-%Create Figure
-VisCon_FigOper();
-VisCon_Axes();
-
-%Draw Network
-%VisCon_DrawNodes(gNetwork.NodeStyle);
-ShowNodes all;
 AxesIndicator on;
-InformationBox on;
+InfoBox on;
 EdgeColorbar on;
 BrainSurf off;
-VisCon_SetButtonEn(...
-    'VisConTbarSave','on',...
+VisCon_SetEnable(...
     'VisConTbarAxesInd','on',...
     'VisConTbarEdgeCbar','on',...
-    'VisConTbarInformBox','on',...
-    'VisConTbarEdgeThres','on');
-if ~isempty(gSurface.LSurfData) || ~isempty(gSurface.RSurfData)
-    VisCon_SetButtonEn('VisConTbarSurfVis','on');
-end
-VisCon_SetMenuEn(...
-    'VisConMenuSave','on',...
+    'VisConTbarInfoBox','on',...
+    'VisConTbarEdgeThres','on',...
+    'VisConMenuSaveAs','on',...
+    'VisConMenuExport','on',...
     'VisConMenuTools','on',...
-    'VisConMenuNetwork','on',...
-    'VisConMenuSurface','on');
-if ~isempty(gSurface.LSurfData)
-    VisCon_SetMenuEn('VisConMenuLSurfVis','on');
+    'VisConMenuSurface','on',...
+    'VisConMenuAnalyze','on',...
+    'VisConMenuAddNewSubjNet','on',...
+    'VisConMenuNodeOper','on',...
+    'VisConMenuEdgeOper','on',...
+    'VisConMenuEdgeThres','on',...
+    'VisConMenuConMatViewer','on',...
+    'VisConMenuImportNets','off');
+if length(gVisConNet) > 1
+    VisCon_SetEnable('VisConMenuSubjPicker', 'on',...
+        'VisConTbarSubjPicker', 'on');
 end
-if ~isempty(gSurface.RSurfData)
-    VisCon_SetMenuEn('VisConMenuRSurfVis','on');
+if gVisConFig.SaveState == 1
+    VisCon_SetEnable('VisConMenuSave','on',...
+        'VisConTbarSave','on');
 end
+if ~isempty(gVisConSurf.LSurfData)
+    VisCon_SetEnable('VisConTbarSurfVis','on',...
+        'VisConMenuLSurfVis','on');
+end
+if ~isempty(gVisConSurf.RSurfData)
+    VisCon_SetEnable('VisConTbarSurfVis','on',...
+        'VisConMenuRSurfVis','on');
+end
+if ~isempty(gVisConSurf.LSurfData) && ~isempty(gVisConSurf.RSurfData)
+    VisCon_SetEnable('VisConMenuBothSurfVis','on');
+end
+gVisConState = 'Finish';
 end
 

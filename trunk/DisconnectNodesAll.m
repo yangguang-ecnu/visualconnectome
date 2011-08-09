@@ -1,10 +1,11 @@
 %HIDEALLEDGES Summary of this function goes here
 %   Detailed explanation goes here
 function DisconnectNodesAll(Nodes)
-global gFigAxes;
-global gNetwork;
-hFig=findobj('Tag','VisConFig');
-hAxes=findobj(hFig,'Tag','VisConAxes');
+global gVisConFig;
+global gVisConNet;
+
+hFig = findobj('Tag','VisConFig');
+hAxes = findobj(hFig,'Tag','VisConAxes');
 if isempty(hFig)
     error('VisualConnectome is not running');
 else
@@ -21,7 +22,7 @@ if nargin<1
 end
 if ischar(Nodes)
     if strcmpi(Nodes,'all')
-        Nodes=[1:gNetwork.NodeNum];
+        Nodes=[1:gVisConFig.NodeNum];
     else
         error('Wrong input argument!');
     end
@@ -31,27 +32,27 @@ end
 if ~isempty(find(Nodes<=0,1))
     error('Nonexistent node! The lower bound of node is 1.');
 end
-if ~isempty(find(Nodes>gNetwork.NodeNum,1))
-    error('Nonexistent node! The upper bound of node is %d.',gNetwork.NodeNum);
+if ~isempty(find(Nodes>gVisConFig.NodeNum,1))
+    error('Nonexistent node! The upper bound of node is %d.',gVisConFig.NodeNum);
 end
 
-hFig=findobj('Tag','VisConFig');
-hAxes=findobj(hFig,'Tag','VisConAxes');
+hFig = findobj('Tag','VisConFig');
+hAxes = findobj(hFig,'Tag','VisConAxes');
 set(hFig,'CurrentAxes',hAxes);
 %Delete all edges of input Nodes
-for i=Nodes
-    Connected=gNetwork.EdgeConnected(i,:);
+for i = Nodes
+    Connected = gVisConNet(gVisConFig.CurSubj).EdgeConnected(i,:);
     if(any(Connected))
-        Showed=gFigAxes.EdgeShowed(i,:);
+        Showed = gVisConFig.EdgeShowed(i,:);
         if(any(Showed))
-            delete(gFigAxes.hEdges(i,Showed));
-            gFigAxes.hEdges(i,Showed)=NaN;
-            gFigAxes.hEdges(Showed,i)=NaN;
-            gFigAxes.EdgeShowed(i,Showed)=0;
-            gFigAxes.EdgeShowed(Showed,i)=0;
+            delete(gVisConFig.hEdges(i,Showed));
+            gVisConFig.hEdges(i,Showed) = NaN;
+            gVisConFig.hEdges(Showed,i) = NaN;
+            gVisConFig.EdgeShowed(i,Showed) = 0;
+            gVisConFig.EdgeShowed(Showed,i) = 0;
         end
-        gNetwork.EdgeConnected(i,Connected)=0;
-        gNetwork.EdgeConnected(Connected,i)=0;
+        gVisConNet(gVisConFig.CurSubj).EdgeConnected(i,Connected) = 0;
+        gVisConNet(gVisConFig.CurSubj).EdgeConnected(Connected,i) = 0;
     end
 end
 end

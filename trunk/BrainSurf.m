@@ -1,17 +1,19 @@
 %TSURFACE Summary of this function goes here
 %   Detailed explanation goes here
-function BrainSurf(Sw,Hemi)
-global gSurface;
-if nargin<1,    Sw='on';    end
-if nargin<2,    Hemi='both';    end
+function BrainSurf(Sw, Hemi)
+global gVisConSurf;
 
-hFig=findobj('Tag','VisConFig');
-hAxes=findobj(hFig,'Tag','VisConAxes');
-hLSurf=findobj(hAxes,'Tag','VisConLSurf');
-hRSurf=findobj(hAxes,'Tag','VisConRSurf');
-hMenuLSurfVis=findobj('Tag','VisConMenuLSurfVis');
-hMenuRSurfVis=findobj('Tag','VisConMenuRSurfVis');
-hTbarSurfVis=findobj('Tag','VisConTbarSurfVis');
+if nargin < 1,    Sw = 'on';    end
+if nargin < 2,    Hemi = 'both';    end
+
+hFig = findobj('Tag','VisConFig');
+hAxes = findobj(hFig,'Tag','VisConAxes');
+hLSurf = findobj(hAxes,'Tag','VisConLSurf');
+hRSurf = findobj(hAxes,'Tag','VisConRSurf');
+hMenuLSurfVis = findobj(hFig,'Tag','VisConMenuLSurfVis');
+hMenuRSurfVis = findobj(hFig,'Tag','VisConMenuRSurfVis');
+hTbarSurfVis = findobj(hFig,'Tag','VisConTbarSurfVis');
+hMenuBothSurfVis = findobj(hFig, 'Tag', 'VisConMenuBothSurfVis');
 if isempty(hFig)
     error('VisualConnectome is not running');
 else
@@ -54,20 +56,26 @@ else
     set(hTbarSurfVis,'State','off');
 end
 
+if strcmp(get(hMenuLSurfVis,'Checked'),'on') && strcmp(get(hMenuRSurfVis,'Checked'),'on')
+    set(hMenuBothSurfVis,'Checked','on');
+else
+    set(hMenuBothSurfVis,'Checked','off');
+end
+
     %Toggle left surface function
     function ToggLSurf(Sw)      
         %Delete surface if it exists
         if ~isempty(hLSurf),    delete(hLSurf);     end
         %Create surface
         if strcmpi(Sw,'on')
-            if isempty(gSurface.LSurfData)
+            if isempty(gVisConSurf.LSurfData)
                 disp('Warning: Missing left hemisphere surface data!');
                 return;
             end
-            patch(gSurface.LSurfData,'Tag','VisConLSurf',...
-                'EdgeColor','none','FaceColor',gSurface.LSurfColor,...
+            patch(gVisConSurf.LSurfData,'Tag','VisConLSurf',...
+                'EdgeColor','none','FaceColor',gVisConSurf.LSurfColor,...
                 'FaceLighting','gouraud','AmbientStrength',0.5,...
-                'FaceAlpha',gSurface.LSurfAlpha,'Clipping','off',...
+                'FaceAlpha',gVisConSurf.LSurfAlpha,'Clipping','off',...
                 'HitTest','off');
             set(hMenuLSurfVis,'Checked','on');
         elseif strcmpi(Sw,'off')
@@ -80,14 +88,14 @@ end
         if ~isempty(hRSurf),    delete(hRSurf);     end
         %Create surface
         if strcmpi(Sw,'on')
-            if isempty(gSurface.RSurfData)
+            if isempty(gVisConSurf.RSurfData)
                 disp('Warning: Missing right hemisphere surface data!');
                 return;
             end
-            patch(gSurface.RSurfData,'Tag','VisConRSurf',...
-                'EdgeColor','none','FaceColor',gSurface.RSurfColor,...
+            patch(gVisConSurf.RSurfData,'Tag','VisConRSurf',...
+                'EdgeColor','none','FaceColor',gVisConSurf.RSurfColor,...
                 'FaceLighting','gouraud','AmbientStrength',0.5,...
-                'FaceAlpha',gSurface.RSurfAlpha,'Clipping','off',...
+                'FaceAlpha',gVisConSurf.RSurfAlpha,'Clipping','off',...
                 'HitTest','off');
             set(hMenuRSurfVis,'Checked','on');
         elseif strcmpi(Sw,'off')
