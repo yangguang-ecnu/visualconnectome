@@ -4,8 +4,14 @@ function SaveVisConFile(File)
 global gNetwork;
 global gSurface;
 hFig=findobj('Tag','VisConFig');
+hAxes=findobj('Tag','VisConAxes');
 if isempty(hFig)
-    error('VisualConnecome is not running!');
+    error('VisualConnectome is not running');
+else
+    set(0,'CurrentFigure',hFig);
+end
+if isempty(hAxes)
+    error('You must first create or open a VCT file!');
 end
 if nargin>0
     if ~ischar(File)

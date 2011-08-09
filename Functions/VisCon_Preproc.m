@@ -56,22 +56,33 @@ end
 
 %Validate Edge Colormap
 colormap(gNetwork.EdgeCmap);
-gNetwork.EdgeCmap=colormap;
-
-%Preallocate handles of some objects
-gFigAxes.hNodes=zeros(gNetwork.NodeNum,1)*NaN;
-gFigAxes.hSelMarkers=zeros(gNetwork.NodeNum,1)*NaN;
-gFigAxes.hEdges=zeros(gNetwork.NodeNum)*NaN;
 
 %Network Attribute
 gNetwork.AdjMat(1:gNetwork.NodeNum+1:end)=0;    %Diagonal elements equal to zero
-gNetwork.EdgeNum=gNetwork.NodeNum*(gNetwork.NodeNum-1);
-SortedAdj=sort(gNetwork.AdjMat(:));
-gNetwork.SortedAdj=SortedAdj(gNetwork.NodeNum+1:end);
-gNetwork.MinAdj=min(SortedAdj);
-gNetwork.MaxAdj=max(SortedAdj);
-gNetwork.EdgeRange=[gNetwork.MinAdj gNetwork.MaxAdj];
-gNetwork.Selected=[];
+gNetwork.AdjMat(gNetwork.AdjMat<0.1)=0;
+gNetwork.EdgeNum=gNetwork.NodeNum*(gNetwork.NodeNum-1)/2;
+SortedWeight=triu(gNetwork.AdjMat);
+SortedWeight=sort(SortedWeight(:));
+gNetwork.SortedWeight=SortedWeight(SortedWeight>=0.1);
+gNetwork.NzEdgeNum=length(gNetwork.SortedWeight);
+gNetwork.MinWeight=min(gNetwork.SortedWeight);
+gNetwork.MaxWeight=max(gNetwork.SortedWeight);
+gNetwork.EdgeRange=[gNetwork.MinWeight gNetwork.MaxWeight];
+gNetwork.EdgeCmap=colormap;
+gNetwork.EdgeConnected=false(gNetwork.NodeNum);
+
+%Preallocate handles of some objects
+gFigAxes.hNodes=zeros(gNetwork.NodeNum,1)*NaN;
+gFigAxes.hNodeMarkers=zeros(gNetwork.NodeNum,1)*NaN;
+gFigAxes.hEdges=zeros(gNetwork.NodeNum)*NaN;
+%Create unit sphere
+[gFigAxes.Sphe.x,gFigAxes.Sphe.y,gFigAxes.Sphe.z]=sphere(20);
+%Create unit cube
+gFigAxes.Cube.Vertices=[1 1 1;1 -1 1;-1 -1 1;-1 1 1;1 1 -1;1 -1 -1;-1 -1 -1;-1 1 -1];
+gFigAxes.Cube.Faces=[1 2 3 4;5 6 7 8;1 2 6 5;3 4 8 7;1 4 8 5;2 3 7 6];
+%Create displaying property
+gFigAxes.NodeSelected=[];
+gFigAxes.EdgeShowed=false(gNetwork.NodeNum);
 
 end
 

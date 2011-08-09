@@ -5,10 +5,21 @@ function VisCon_OpenDlg()
     'Open VisualConnectome File');
 if Type==1
     try
-        LoadVisConFile(fullfile(Path,File),'on');
+        VCDataStruct=LoadVisConFile(fullfile(Path,File));
     catch
-        errordlg('Loading failed.Invalid or damaged file!',...
+        errordlg('Load VCT file failed! Invalid or damaged file!',...
             'Open VisualConnectome File');
+        return;
+    end
+    try
+        VisualConnectome(VCDataStruct);
+    catch
+        hFig=findobj('Tag','VisConFig');
+        if ~isempty(hFig),  delete(hFig);   end
+        VisualConnectome();
+        errordlg('Open VCT file failed! Invalid or damaged file!',...
+            'Open VisualConnectome File');
+        
     end
 end
 end
