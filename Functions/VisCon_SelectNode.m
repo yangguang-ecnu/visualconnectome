@@ -1,37 +1,47 @@
-% Select node button down function
-function VisCon_SelectNode(Src,Evnt)
-global gFigAxes;
-hFig=findobj('Tag','VisConFig');
-SelType=get(hFig,'SelectionType');
+function VisCon_SelectNode(Src, Evnt)
+global gVisConNet;
+global gVisConFig;
+hFig = findobj('Tag', 'VisConFig');
+SelType = get(hFig, 'SelectionType');
+Modifier = get(hFig, 'CurrentModifier');
+%Find which node is click
+[iNode,~] = find(gVisConFig.hNodes == Src);
 %Delete before left click
-if strcmp(SelType,'normal')
-    for i=gFigAxes.NodeSelected
-        if ishandle(gFigAxes.hNodeMarkers(i))
-            delete(gFigAxes.hNodeMarkers(i))
+if strcmp(SelType,'normal') || (strcmpi(SelType,'alt') && isempty(strmatch('control', Modifier))) && isempty(find(gVisConFig.NodeSelected == iNode, 1))
+    for i = gVisConFig.NodeSelected
+        if ishandle(gVisConFig.hNodeMarkers(i))
+            delete(gVisConFig.hNodeMarkers(i))
         end
-        gFigAxes.hNodeMarkers(i)=NaN;
+        gVisConFig.hNodeMarkers(i) = NaN;
     end
-    gFigAxes.NodeSelected=[];
+    gVisConFig.NodeSelected = [];
 end
-if strcmp(SelType,'normal') || strcmp(SelType,'alt')
+if strcmpi(SelType,'normal') || (strcmpi(SelType,'alt') && (~isempty(strmatch('control', Modifier)) || isempty(gVisConFig.NodeSelected)))
     %Display selected marker
-    [i,~]=find(gFigAxes.hNodes==Src);
-    if isempty(find(gFigAxes.NodeSelected==i,1))
-        VisCon_DrawNodeMarker(i)
-        gFigAxes.NodeSelected=[gFigAxes.NodeSelected i];
+    if isempty(find(gVisConFig.NodeSelected == iNode,1))
+        VisCon_DrawNodeMarker(iNode);
+        gVisConFig.NodeSelected = [gVisConFig.NodeSelected iNode];
     else
-        if ishandle(gFigAxes.hNodeMarkers(i))
-            delete(gFigAxes.hNodeMarkers(i));
+        if ishandle(gVisConFig.hNodeMarkers(iNode))
+            delete(gVisConFig.hNodeMarkers(iNode));
         end
-        gFigAxes.hNodeMarkers(i)=NaN;
-        gFigAxes.NodeSelected=gFigAxes.NodeSelected(gFigAxes.NodeSelected~=i);
+        gVisConFig.hNodeMarkers(iNode) = NaN;
+        gVisConFig.NodeSelected = gVisConFig.NodeSelected(gVisConFig.NodeSelected ~= iNode);
     end
     %Display information of last selected node
-    if isempty(gFigAxes.NodeSelected)
-        VisCon_UpdateInform([]);
+    if isempty(gVisConFig.NodeSelected)
+        VisCon_UpdateInfo([]);
     else
-        VisCon_UpdateInform(gFigAxes.NodeSelected(end));
+        VisCon_UpdateInfo(gVisConFig.NodeSelected(end));
     end
 end
+% if strcmp(SelType,'open')
+%     EdgeShowed = (gVisConNet(gVisConFig.CurSubj).ConMat(iNode,:) >= gVisConNet(gVisConFig.CurSubj).EdgeAbsThres);
+%     if all(all(gVisConNet(gVisConFig.CurSubj).EdgeConnected(iNode,:)))...
+%             || isequal(EdgeShowed, gVisConFig.EdgeShowed(iNode,:))
+%         DisconnectNodesAll(iNode);
+%     else
+%         ConnectNodesAll(iNode);
+%     end
+% end
 end
-

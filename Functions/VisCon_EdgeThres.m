@@ -1,94 +1,79 @@
-%THRESEDGE Summary of this function goes here
-%   Detailed explanation goes here
-function VisCon_EdgeThres(Method,MinThres,MaxThres)
-global gNetwork;
-if nargin<2
+function VisCon_EdgeThres(Method, Thres, Subj)
+global gVisConFig;
+global gVisConNet;
+if nargin < 2
     error('Require at least two arguments!');
+end
+if nargin < 3
+    Subj = gVisConFig.CurSubj;
 end
 %Absolute Threshold
 if strcmpi(Method,'absolute')
-    if nargin<3,                        
-        MaxThres=gNetwork.MaxWeight;    
-    end
-    if isempty(MinThres),               
-        MinThres=gNetwork.MinWeight;    
-    end
-    if isempty(MaxThres),               
-        MaxThres=gNetwork.MaxWeight;    
-    end
-    if MinThres<gNetwork.MinWeight,     
-        MinThres=gNetwork.MinWeight;
+    if Thres < gVisConNet(Subj).MinWeight     
+        Thres = gVisConNet(Subj).MinWeight;
         warning('VisCon:EdgeThres',...
-            ['Minimal threshold is smaller than minimal weight!\n'...
-            'Use %6f instead!'],gNetwork.MinWeight);
+            ['Absolute threshold of the %d-th subject is smaller than minimal weight!\n'...
+            'Use %6f instead!'], Subj, gVisConNet(Subj).MinWeight);
     end
-    if MaxThres>gNetwork.MaxWeight,     
-        MaxThres=gNetwork.MaxWeight;
+    if Thres > gVisConNet(Subj).MaxWeight,     
+        Thres = gVisConNet(Subj).MaxWeight;
         warning('VisCon:EdgeThres',...
-            ['Maximal threshold is larger than maximal weight!\n'...
-            'Use %6f instead!'],gNetwork.MaxWeight);
+            ['Absolute threshold of the %d-th subject is larger than maximal weight!\n'...
+            'Use %6f instead!'], Subj, gVisConNet(Subj).MaxWeight);
     end
-    if MinThres>MaxThres
-        error('Minimal threshold is larger than maximal threshold!');
+    if Thres ~= gVisConNet(Subj).EdgeAbsThres
+        gVisConNet(Subj).EdgeAbsThres = Thres;
+        gVisConNet(Subj).EdgeCountThres = sum(gVisConNet(Subj).SortedWeight >= Thres);
     end
-    fprintf('Edges with weight between %.6f and %.6f will be retained!\n',...
-        MinThres,MaxThres);
-    gNetwork.EdgeRange=[MinThres,MaxThres];
+    gVisConFig.EdgeThresType = 0;
 %Counting Threshold
 elseif strcmpi(Method,'counting')
-    if nargin>2
-        warning('VisCon:EdgeThres',['Require only two arguments!\n'...
-           'Maximal threshold will be ignored!']);
-    end
-    if isempty(MinThres)
-        error('Missing minimal threshold, it must be a number ranging from 1 and %i!',...
-            gNetwork.NzEdgeNum);
-    end
-    if MinThres<1      
-        MinThres=1;
-        warning('VisCon:EdgeThres',['The input argument is smaller than 1.\n'...
-            'Use 1 instead!']);
-    elseif MinThres>gNetwork.NzEdgeNum
-        MinThres=gNetwork.NzEdgeNum;
-        warning('VisCon:EdgeThres',['The input argument is larger than'...
-            'the number of non-zero edges.\nUse %i instead!'],gNetwork.NzEdgeNum);
+    if Thres < 1      
+        Thres = 1;
+        warning('VisCon:EdgeThres',...
+            ['Counting threshold of the %d-th subject is smaller than 1.\n'...
+            'Use 1 instead!'], Subj);
+    elseif Thres > gVisConNet(Subj).NzEdgeNum
+        Thres = gVisConNet(Subj).NzEdgeNum;
+        warning('VisCon:EdgeThres',...
+            ['Counting threshold of the %d-th subject is larger than the number of non-zero edges.\n'...
+            'Use %i instead!'], Subj, gVisConNet(Subj).NzEdgeNum);
     else
-        MinThres=round(MinThres);
+        Thres = round(Thres);
     end
-    MinThres=gNetwork.SortedWeight(gNetwork.NzEdgeNum-MinThres+1);
-    Count=sum(gNetwork.SortedWeight>=MinThres);
-    fprintf('%i of strongest edges will be retained!\n',Count);
-    gNetwork.EdgeRange=[MinThres,gNetwork.MaxWeight];
+    if Thres ~= gVisConNet(Subj).EdgeCountThres
+        Thres = gVisConNet(Subj).SortedWeight(gVisConNet(Subj).NzEdgeNum - Thres + 1);
+        Count = sum(gVisConNet(Subj).SortedWeight >= Thres);
+        gVisConNet(Subj).EdgeAbsThres = Thres;
+        gVisConNet(Subj).EdgeCountThres = Count;
+    end
+    gVisConFig.EdgeThresType = 1;
 %Proportional Threshold
 elseif strcmpi(Method,'proportional')
-    if nargin>2
-        warning('VisCon:EdgeThres',['Require only two arguments!\n'...
-           'Maximal threshold will be ignored!']);
-    end
-    if isempty(MinThres)
-        error('Missing minimal threshold, it must be a number ranging from 0 and %.2f!',...
-            gNetwork.NzEdgeNum/gNetwork.EdgeNum*100);
-    end
-    MinThres=gNetwork.EdgeNum*MinThres;
-    if MinThres<1
-        MinThres=1;
-        warning('VisCon:EdgeThres',['The input percentage is smaller than %.2f.\n'...
-            'Use %.2f instead!'],100/gNetwork.EdgeNum,100/gNetwork.EdgeNum);
-    elseif MinThres>gNetwork.NzEdgeNum
-        MinThres=gNetwork.NzEdgeNum;
-        warning('VisCon:EdgeThres',['The input argument is larger than %.2f.\n'...
-            'Use %.2f instead!'],gNetwork.NzEdgeNum/gNetwork.EdgeNum*100,...
-            gNetwork.NzEdgeNum/gNetwork.EdgeNum*100);
+    Thres = gVisConFig.EdgeNum * Thres;
+    if Thres < 1
+        Thres = 1;
+        warning('VisCon:EdgeThres',...
+            ['Proportional threshold of the %d-th subject is smaller than %.2f.\n'...
+            'Use %.2f instead!'], Subj, 100/gVisConFig.EdgeNum, 100/gVisConFig.EdgeNum);
+    elseif Thres > gVisConNet(Subj).NzEdgeNum
+        Thres = gVisConNet(Subj).NzEdgeNum;
+        warning('VisCon:EdgeThres',...
+            ['Proportional threshold of the %d-th subject is larger than %.2f.\n'...
+            'Use %.2f instead!'], Subj, gVisConNet(Subj).NzEdgeNum/gVisConFig.EdgeNum*100,...
+            gVisConNet(Subj).NzEdgeNum/gVisConFig.EdgeNum*100);
     else
-        MinThres=round(MinThres);
+        Thres = round(Thres);
     end
-    MinThres=gNetwork.SortedWeight(gNetwork.NzEdgeNum-MinThres+1);
-    Count=sum(gNetwork.SortedWeight>=MinThres);
-    fprintf('%.2f%% of strongest edges will be retained!\n',Count*100/gNetwork.EdgeNum);
-    gNetwork.EdgeRange=[MinThres,gNetwork.MaxWeight];
+    if Thres ~= gVisConNet(Subj).EdgeCountThres
+        Thres = gVisConNet(Subj).SortedWeight(gVisConNet(Subj).NzEdgeNum-Thres + 1);
+        Count = sum(gVisConNet(Subj).SortedWeight >= Thres);
+        gVisConNet(Subj).EdgeAbsThres = Thres;
+        gVisConNet(Subj).EdgeCountThres = Count;
+    end
+    gVisConFig.EdgeThresType = 1;
 else
     error('Wrong input argument!')
 end
-%Update edge colorbar
-VisCon_UpdateEdgeCbar()
+
 end
