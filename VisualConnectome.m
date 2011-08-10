@@ -9,6 +9,7 @@
 %Revision 0.20b 2011/05/21 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
 %Revision 0.30a 2011/07/28 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
 %Revision 0.35a 2011/08/01 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
+%Revision 0.35b 2011/08/01 by Dai Dai @NICA Group,CASIA solar2ain@gmail.com
 
 function VisualConnectome(ConMat,PosMat,varargin)
 global gVisConFig;
