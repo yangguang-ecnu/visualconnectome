@@ -144,10 +144,10 @@ uicontrol(hButtonGroup,'Style','text',...
     %Absolute minimal threshold edit function
     function AbsThresEditFcn(Src,Evnt)
         AbsThres = str2double(get(Src,'String'));
-        errmsg=sprintf('You must enter a number between\n%.7f and %.7f',...
+        errmsg = sprintf('You must enter a number between\n%.7f and %.7f',...
             gVisConNet(gVisConFig.CurSubj).MinWeight,gVisConNet(gVisConFig.CurSubj).MaxWeight);
         if ~isnan(AbsThres)
-            if AbsMinThres<gVisConNet(gVisConFig.CurSubj).MinWeight || AbsMinThres>gVisConNet(gVisConFig.CurSubj).MaxWeight
+            if AbsThres<gVisConNet(gVisConFig.CurSubj).MinWeight || AbsThres>gVisConNet(gVisConFig.CurSubj).MaxWeight
                 errordlg(errmsg,'Threshold error');
                 set(Src,'String','');
                 return;

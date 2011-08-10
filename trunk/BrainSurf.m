@@ -50,6 +50,8 @@ elseif strcmpi(Sw,'off') || strcmpi(Sw,'hide')
 else
     error('Wrong input argument!');
 end
+
+
 if strcmp(get(hMenuLSurfVis,'Checked'),'on') || strcmp(get(hMenuRSurfVis,'Checked'),'on')
     set(hTbarSurfVis,'State','on');
 else
